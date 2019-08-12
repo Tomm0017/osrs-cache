@@ -1,0 +1,6 @@
+ext {
+    junitVersion = '5.5.1'
+    kotlinResultVersion = '1.1.0'
+    rsmodCacheVersion = '0.6.4'
+    trove4jVersion = '3.0.3'
+}
