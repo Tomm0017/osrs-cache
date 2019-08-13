@@ -5,10 +5,7 @@ import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getError
 import gg.rsmod.cache.io.ReadOnlyPacket
-import gg.rsmod.cache.osrs.DecodeMessage
-import gg.rsmod.cache.osrs.EMPTY_STRING
-import gg.rsmod.cache.osrs.InstructionMap
-import gg.rsmod.cache.osrs.NULL_STRING
+import gg.rsmod.cache.osrs.*
 import gg.rsmod.cache.osrs.config.ConfigType
 
 open class ObjType : ConfigType {
@@ -24,8 +21,8 @@ open class ObjType : ConfigType {
     var boughttemplate = -1
     var placeholderlink = -1
     var placeholdertemplate = -1
-    lateinit var iops: Array<String?>
-    lateinit var ops: Array<String?>
+    var iops = DEFAULT_IOPS
+    var ops = DEFAULT_OPS
     var team = 0
     var model = 0
     var xof2d = 0
@@ -51,35 +48,35 @@ open class ObjType : ConfigType {
     var womanwear3 = -1
     var womanhead = -1
     var womanhead2 = -1
-    lateinit var recol_s: ShortArray
-    lateinit var recol_d: ShortArray
-    lateinit var retex_s: ShortArray
-    lateinit var retex_d: ShortArray
-    lateinit var countco: IntArray
-    lateinit var countobj: IntArray
-    lateinit var stringParams: MutableMap<Int, String>
-    lateinit var intParams: MutableMap<Int, Int>
+    var recol_s = EMPTY_SHORT_ARRAY
+    var recol_d = EMPTY_SHORT_ARRAY
+    var retex_s = EMPTY_SHORT_ARRAY
+    var retex_d = EMPTY_SHORT_ARRAY
+    var countco = EMPTY_INT_ARRAY
+    var countobj = EMPTY_INT_ARRAY
+    var stringParams: MutableMap<Int, String> = EMPTY_INT_STRING_MAP as MutableMap<Int, String>
+    var intParams: MutableMap<Int, Int> = EMPTY_INT_INT_MAP as MutableMap<Int, Int>
 
     val hasOps: Boolean
-        get() = ::ops.isInitialized
+        get() = ops != DEFAULT_OPS
 
     val hasIOps: Boolean
-        get() = ::iops.isInitialized
+        get() = iops != DEFAULT_IOPS
 
     val hasRecol: Boolean
-        get() = ::recol_s.isInitialized
+        get() = recol_s != EMPTY_SHORT_ARRAY
 
     val hasRetex: Boolean
-        get() = ::retex_s.isInitialized
+        get() = retex_s != EMPTY_SHORT_ARRAY
 
     val hasCountCo: Boolean
-        get() = ::countobj.isInitialized
+        get() = countco != EMPTY_INT_ARRAY
 
     val hasStrParams: Boolean
-        get() = ::stringParams.isInitialized
+        get() = stringParams.isNotEmpty()
 
     val hasIntParams: Boolean
-        get() = ::intParams.isInitialized
+        get() = intParams.isNotEmpty()
 
     val isNoted: Boolean
         get() = certtemplate != -1
@@ -124,6 +121,15 @@ open class ObjType : ConfigType {
     }
 
     companion object {
+
+        private val DEFAULT_IOPS = arrayOf(
+            null, null, null, null, "Examine"
+        )
+
+        private val DEFAULT_OPS = arrayOf(
+            null, null, "Take", null, "Examine"
+        )
+
         val instructions = InstructionMap<ObjType>()
 
         init {
@@ -150,7 +156,7 @@ open class ObjType : ConfigType {
                 register(26) { womanwear2 = it.g2 }
                 for (i in 30 until 35) {
                     register(i) {
-                        if (!::ops.isInitialized) {
+                        if (!hasOps) {
                             ops = Array(5) { EMPTY_STRING }
                         }
                         val option = it.gjstr
@@ -164,7 +170,7 @@ open class ObjType : ConfigType {
                 }
                 for (i in 35 until 40) {
                     register(i) {
-                        if (!::iops.isInitialized) {
+                        if (!hasIOps) {
                             iops = Array(5) { EMPTY_STRING }
                         }
                         iops[i - 35] = it.gjstr
@@ -203,7 +209,7 @@ open class ObjType : ConfigType {
                 register(98) { certtemplate = it.g2 }
                 for (i in 100 until 110) {
                     register(i) {
-                        if (!::countobj.isInitialized) {
+                        if (!hasCountCo) {
                             countobj = IntArray(10)
                             countco = IntArray(10)
                         }

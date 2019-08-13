@@ -8,6 +8,10 @@ import gg.rsmod.cache.osrs.config.Js5Archive
 
 internal const val EMPTY_STRING = ""
 internal const val NULL_STRING = "null"
+internal val EMPTY_SHORT_ARRAY = ShortArray(0)
+internal val EMPTY_INT_ARRAY = IntArray(0)
+internal val EMPTY_INT_INT_MAP = emptyMap<Int, Int>()
+internal val EMPTY_INT_STRING_MAP = emptyMap<Int, String>()
 
 fun FileSystem.Companion.buildOsrs(directory: String): Result<FileSystem, DomainMessage> =
     FileSystem.of {
