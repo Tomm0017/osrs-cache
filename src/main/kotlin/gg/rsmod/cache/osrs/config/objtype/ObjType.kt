@@ -11,7 +11,7 @@ import gg.rsmod.cache.osrs.InstructionMap
 import gg.rsmod.cache.osrs.NULL_STRING
 import gg.rsmod.cache.osrs.config.ConfigType
 
-class ObjType : ConfigType {
+open class ObjType : ConfigType {
 
     var name: String = NULL_STRING
     var members: Boolean = false
