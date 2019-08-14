@@ -54,23 +54,23 @@ open class ObjType : ConfigType {
     var retex_d = EMPTY_SHORT_ARRAY
     var countco = EMPTY_INT_ARRAY
     var countobj = EMPTY_INT_ARRAY
-    var stringParams: MutableMap<Int, String> = EMPTY_INT_STRING_MAP as MutableMap<Int, String>
-    var intParams: MutableMap<Int, Int> = EMPTY_INT_INT_MAP as MutableMap<Int, Int>
+    var stringParams: MutableMap<Int, String> = EMPTY_INT_STRING_MAP
+    var intParams: MutableMap<Int, Int> = EMPTY_INT_INT_MAP
 
     val hasOps: Boolean
-        get() = ops != DEFAULT_OPS
+        get() = ops.isNotEmpty()
 
     val hasIOps: Boolean
-        get() = iops != DEFAULT_IOPS
+        get() = iops.isNotEmpty()
 
     val hasRecol: Boolean
-        get() = recol_s != EMPTY_SHORT_ARRAY
+        get() = recol_s.isNotEmpty()
 
     val hasRetex: Boolean
-        get() = retex_s != EMPTY_SHORT_ARRAY
+        get() = retex_s.isNotEmpty()
 
     val hasCountCo: Boolean
-        get() = countco != EMPTY_INT_ARRAY
+        get() = countco.isNotEmpty()
 
     val hasStrParams: Boolean
         get() = stringParams.isNotEmpty()
