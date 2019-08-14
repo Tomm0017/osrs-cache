@@ -5,7 +5,7 @@ plugins {
 apply from: 'gradle/properties.gradle'
 
 group 'gg.rsmod'
-version '1.0.2-SNAPSHOT'
+version '1.0.3-SNAPSHOT'
 
 repositories {
     mavenCentral()
