@@ -134,7 +134,13 @@ open class ObjType : ConfigType {
                         if (iops == DEFAULT_IOPS) {
                             iops = Array(5) { EMPTY_STRING }
                         }
-                        iops[i - 35] = it.gjstr
+                        val option = it.gjstr
+                        iops[i - 35] =
+                            if (option.isEmpty()) {
+                                null
+                            } else {
+                                option
+                            }
                     }
                 }
                 register(40) {
