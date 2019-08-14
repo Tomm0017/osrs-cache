@@ -5,7 +5,7 @@ plugins {
 apply from: 'gradle/properties.gradle'
 
 group 'gg.rsmod'
-version '1.0.7-SNAPSHOT'
+version '1.0.8-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "com.github.Tomm0017:rsmod-cache:$rsmodCacheVersion"
     compile "com.michael-bull.kotlin-result:kotlin-result:$kotlinResultVersion"
-    compile "net.sf.trove4j:trove4j:$trove4jVersion"
+    compile "it.unimi.dsi:fastutil:$fastutilVersion"
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
 }
 
