@@ -118,7 +118,7 @@ open class ObjType : ConfigType {
                 for (i in 30 until 35) {
                     register(i) {
                         if (ops == DEFAULT_OPS) {
-                            ops = Array(5) { EMPTY_STRING }
+                            ops = Array(5) { null }
                         }
                         val option = it.gjstr
                         ops[i - 30] =
@@ -132,11 +132,11 @@ open class ObjType : ConfigType {
                 for (i in 35 until 40) {
                     register(i) {
                         if (iops == DEFAULT_IOPS) {
-                            iops = Array(5) { EMPTY_STRING }
+                            iops = Array(5) { null }
                         }
                         val option = it.gjstr
                         iops[i - 35] =
-                            if (option.isEmpty()) {
+                            if (option.isBlank()) {
                                 null
                             } else {
                                 option
