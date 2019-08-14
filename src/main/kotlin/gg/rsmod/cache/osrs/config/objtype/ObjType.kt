@@ -3,8 +3,8 @@ package gg.rsmod.cache.osrs.config.objtype
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.getError
 import gg.rsmod.cache.io.ReadOnlyPacket
+import gg.rsmod.cache.io.WriteOnlyPacket
 import gg.rsmod.cache.osrs.*
 import gg.rsmod.cache.osrs.config.ConfigType
 
@@ -48,6 +48,7 @@ open class ObjType : ConfigType {
     var womanwear3 = -1
     var womanhead = -1
     var womanhead2 = -1
+    var shiftClickDropIndex = -1 // TODO get canon name. RL labels this as 'shiftClickDropIndex'
     var recol_s = EMPTY_SHORT_ARRAY
     var recol_d = EMPTY_SHORT_ARRAY
     var retex_s = EMPTY_SHORT_ARRAY
@@ -57,17 +58,26 @@ open class ObjType : ConfigType {
     var stringParams: MutableMap<Int, String> = EMPTY_INT_STRING_MAP
     var intParams: MutableMap<Int, Int> = EMPTY_INT_INT_MAP
 
+    override fun encodeType(packet: WriteOnlyPacket) {
+        instructions.forEach { (instruction, operation) ->
+            val allowWrite = operation.writeCondition(this)
+            if (allowWrite) {
+                val encodeOp = operation.write
+                packet.p1(instruction)
+                encodeOp(this, packet)
+            }
+        }
+        packet.p1(0)
+    }
+
     override fun decodeType(packet: ReadOnlyPacket): Result<ObjType, DecodeMessage> {
         while (packet.isReadable) {
             val instruction = packet.g1
             if (instruction == 0) {
                 break
             }
-            val result = decode(packet, instruction)
-            val err = result.getError()
-            if (err != null) {
-                return Err(err)
-            }
+            val readOp = instructions.get(instruction)?.read ?: return Err(DecodeMessage.UnhandledInstruction)
+            readOp(this, packet)
         }
         return Ok(this)
     }
@@ -75,48 +85,115 @@ open class ObjType : ConfigType {
     override fun postDecode() {
     }
 
-    private fun decode(packet: ReadOnlyPacket, instruction: Int): Result<ObjType, DecodeMessage> {
-        val onRead = instructions.get(instruction) ?: return Err(DecodeMessage.UnhandledInstruction)
-        onRead.invoke(this, packet)
-        return Ok(this)
-    }
-
     companion object {
 
         private val DEFAULT_IOPS = arrayOf(
-            null, null, null, null, "Examine"
+            null, null, null, null, "Drop"
         )
 
         private val DEFAULT_OPS = arrayOf(
-            "Take", null, null, null, "Examine"
+            null, null, "Take", null, null
         )
 
-        val instructions = InstructionMap<ObjType>()
+        // TODO: get rid of magic numbers for default values.
+        val instructions = InstructionMap<ObjType>().apply {
 
-        init {
-            instructions.apply {
-                register(1) { model = it.g2 }
-                register(2) { name = it.gjstr }
-                register(4) { zoom2d = it.g2 }
-                register(5) { xan2d = it.g2 }
-                register(6) { yan2d = it.g2 }
-                register(7) { xof2d = it.g2s }
-                register(8) { yof2d = it.g2s }
-                register(11) { stackable = true }
-                register(12) { cost = it.g4 }
-                register(16) { members = true }
-                register(23) {
+            register(1) {
+                read { model = it.g2 }
+                write { it.p2(model) }
+                    .onlyIf { model != 0 }
+            }
+
+            register(2) {
+                read { name = it.gjstr }
+                write { it.pjstr(name) }
+            }
+
+            register(4) {
+                read { zoom2d = it.g2 }
+                write { it.p2(zoom2d) }
+                    .onlyIf { zoom2d != 2000 }
+            }
+
+            register(5) {
+                read { xan2d = it.g2 }
+                write { it.p2(xan2d) }
+                    .onlyIf { xan2d != 0 }
+            }
+
+            register(6) {
+                read { yan2d = it.g2 }
+                write { it.p2(yan2d) }
+                    .onlyIf { yan2d != 0 }
+            }
+
+            register(7) {
+                read { xof2d = it.g2s }
+                write { it.p2(xof2d) }
+                    .onlyIf { xof2d != 0 }
+            }
+
+            register(8) {
+                read { yof2d = it.g2s }
+                write { it.p2(yof2d) }
+                    .onlyIf { yof2d != 0 }
+            }
+
+            register(11) {
+                read { stackable = true }
+                writeOnlyWhen { stackable }
+            }
+
+            register(12) {
+                read { cost = it.g4 }
+                write { it.p4(cost) }
+                    .onlyIf { cost != 1 }
+            }
+
+            register(16) {
+                read { members = true }
+                writeOnlyWhen { members }
+            }
+
+            register(23) {
+                read {
                     manwear = it.g2
                     manwearoff = it.g1
                 }
-                register(24) { manwear2 = it.g2 }
-                register(25) {
+
+                write {
+                    it.p2(manwear)
+                    it.p1(manwearoff)
+                }.onlyIf { manwear != -1 || manwearoff != 0 }
+            }
+
+            register(24) {
+                read { manwear2 = it.g2 }
+                write { it.p2(manwear2) }
+                    .onlyIf { manwear2 != -1 }
+            }
+
+            register(25) {
+                read {
                     womanwear = it.g2
                     womanwearoff = it.g1
                 }
-                register(26) { womanwear2 = it.g2 }
-                for (i in 30 until 35) {
-                    register(i) {
+
+                write {
+                    it.p2(womanwear)
+                    it.p1(womanwearoff)
+                }.onlyIf { womanwear != -1 || womanwearoff != 0 }
+            }
+
+            register(26) {
+                read { womanwear2 = it.g2 }
+                write { it.p2(womanwear2) }
+                    .onlyIf { womanwear2 != -1 }
+            }
+
+            for (i in 30 until 35) {
+                register(i) {
+                    read {
                         if (ops == DEFAULT_OPS) {
                             ops = Array(5) { null }
                         }
@@ -128,9 +205,17 @@ open class ObjType : ConfigType {
                                 option
                             }
                     }
+
+                    write {
+                        val option = ops[i - 30] ?: "Hidden"
+                        it.pjstr(option)
+                    }
                 }
-                for (i in 35 until 40) {
-                    register(i) {
+            }
+
+            for (i in 35 until 40) {
+                register(i) {
+                    read {
                         if (iops == DEFAULT_IOPS) {
                             iops = Array(5) { null }
                         }
@@ -142,8 +227,16 @@ open class ObjType : ConfigType {
                                 option
                             }
                     }
+
+                    write {
+                        val option = iops[i - 35] ?: ""
+                        it.pjstr(option)
+                    }
                 }
-                register(40) {
+            }
+
+            register(40) {
+                read {
                     val recolourCount = it.g1
                     recol_s = ShortArray(recolourCount)
                     recol_d = ShortArray(recolourCount)
@@ -153,7 +246,20 @@ open class ObjType : ConfigType {
                         recol_d[i] = it.g2.toShort()
                     }
                 }
-                register(41) {
+
+                write {
+                    check(recol_s.size == recol_d.size)
+                    val count = recol_s.size
+                    it.p1(count)
+                    for (i in 0 until count) {
+                        it.p2(recol_s[i].toInt())
+                        it.p2(recol_d[i].toInt())
+                    }
+                }.onlyIf { recol_s.isNotEmpty() || recol_d.isNotEmpty() }
+            }
+
+            register(41) {
+                read {
                     val retextureCount = it.g1
                     retex_s = ShortArray(retextureCount)
                     retex_d = ShortArray(retextureCount)
@@ -163,19 +269,86 @@ open class ObjType : ConfigType {
                         retex_d[i] = it.g2.toShort()
                     }
                 }
-                register(42) { it.g1s } // TODO. RL labels this as 'shiftClickDropIndex'
-                register(65) { stockmarket = true }
-                register(78) { manwear3 = it.g2 }
-                register(79) { womanwear3 = it.g2 }
-                register(90) { manhead = it.g2 }
-                register(91) { womanhead = it.g2 }
-                register(92) { manhead2 = it.g2 }
-                register(93) { womanhead2 = it.g2 }
-                register(95) { zan2d = it.g2 }
-                register(97) { certlink = it.g2 }
-                register(98) { certtemplate = it.g2 }
-                for (i in 100 until 110) {
-                    register(i) {
+
+                write {
+                    check(retex_s.size == retex_d.size)
+                    val count = retex_s.size
+                    it.p1(count)
+                    for (i in 0 until count) {
+                        it.p2(retex_s[i].toInt())
+                        it.p2(retex_d[i].toInt())
+                    }
+                }.onlyIf { retex_s.isNotEmpty() || retex_d.isNotEmpty() }
+            }
+
+            register(42) {
+                read { shiftClickDropIndex = it.g1s }
+                write { it.p1(shiftClickDropIndex) }
+                    .onlyIf { shiftClickDropIndex != -1 }
+            }
+
+            register(65) {
+                read { stockmarket = true }
+                writeOnlyWhen { stockmarket }
+            }
+
+            register(78) {
+                read { manwear3 = it.g2 }
+                write { it.p2(manwear3) }
+                    .onlyIf { manwear3 != -1 }
+            }
+
+            register(79) {
+                read { womanwear3 = it.g2 }
+                write { it.p2(womanwear3) }
+                    .onlyIf { womanwear3 != -1 }
+            }
+
+            register(90) {
+                read { manhead = it.g2 }
+                write { it.p2(manhead) }
+                    .onlyIf { manhead != -1 }
+            }
+
+            register(91) {
+                read { womanhead = it.g2 }
+                write { it.p2(womanhead) }
+                    .onlyIf { womanhead != -1 }
+            }
+
+            register(92) {
+                read { manhead2 = it.g2 }
+                write { it.p2(manhead2) }
+                    .onlyIf { manhead2 != -1 }
+            }
+
+            register(93) {
+                read { womanhead2 = it.g2 }
+                write { it.p2(womanhead2) }
+                    .onlyIf { womanhead2 != -1 }
+            }
+
+            register(95) {
+                read { zan2d = it.g2 }
+                write { it.p2(zan2d) }
+                    .onlyIf { zan2d != 0 }
+            }
+
+            register(97) {
+                read { certlink = it.g2 }
+                write { it.p2(certlink) }
+                    .onlyIf { certlink != -1 }
+            }
+
+            register(98) {
+                read { certtemplate = it.g2 }
+                write { it.p2(certtemplate) }
+                    .onlyIf { certtemplate != -1 }
+            }
+
+            for (i in 100 until 110) {
+                register(i) {
+                    read {
                         if (countobj.isEmpty()) {
                             countobj = IntArray(10)
                             countco = IntArray(10)
@@ -183,18 +356,76 @@ open class ObjType : ConfigType {
                         countobj[i - 100] = it.g2
                         countco[i - 100] = it.g2
                     }
+
+                    write {
+                        it.p2(countobj[i - 100])
+                        it.p2(countco[i - 100])
+                    }.onlyIf { countobj.size >= (i - 100) }
                 }
-                register(110) { resizex = it.g2 }
-                register(111) { resizey = it.g2 }
-                register(112) { resizez = it.g2 }
-                register(113) { ambient = it.g1s }
-                register(114) { contrast = it.g1s }
-                register(115) { team = it.g1 }
-                register(139) { boughtlink = it.g2 }
-                register(140) { boughttemplate = it.g2 }
-                register(148) { placeholderlink = it.g2 }
-                register(149) { placeholdertemplate = it.g2 }
-                register(249) {
+            }
+
+            register(110) {
+                read { resizex = it.g2 }
+                write { it.p2(resizex) }
+                    .onlyIf { resizex != 128 }
+            }
+
+            register(111) {
+                read { resizey = it.g2 }
+                write { it.p2(resizey) }
+                    .onlyIf { resizey != 128 }
+            }
+
+            register(112) {
+                read { resizez = it.g2 }
+                write { it.p2(resizez) }
+                    .onlyIf { resizez != 128 }
+            }
+
+            register(113) {
+                read { ambient = it.g1s }
+                write { it.p1(ambient) }
+                    .onlyIf { ambient != 0 }
+            }
+
+            register(114) {
+                read { contrast = it.g1s }
+                write { it.p1(contrast) }
+                    .onlyIf { contrast != 0}
+            }
+
+            register(115) {
+                read { team = it.g1 }
+                write { it.p1(team) }
+                    .onlyIf { team != 0 }
+            }
+
+            register(139) {
+                read { boughtlink = it.g2 }
+                write { it.p2(boughtlink) }
+                    .onlyIf { boughtlink != -1 }
+            }
+
+            register(140) {
+                read { boughttemplate = it.g2 }
+                write { it.p2(boughttemplate) }
+                    .onlyIf { boughttemplate != -1 }
+            }
+
+            register(148) {
+                read { placeholderlink = it.g2 }
+                write { it.p2(placeholderlink) }
+                    .onlyIf { placeholderlink != -1 }
+            }
+
+            register(149) {
+                read { placeholdertemplate = it.g2 }
+                write { it.p2(placeholdertemplate) }
+                    .onlyIf { placeholdertemplate != -1 }
+            }
+
+            register(249) {
+                read {
                     intParams = mutableMapOf()
                     stringParams = mutableMapOf()
 
@@ -209,6 +440,24 @@ open class ObjType : ConfigType {
                         }
                     }
                 }
+
+                write {
+                    it.p1(0) // placeholder for total param count
+                    intParams.forEach { (id, value) ->
+                        it.p1(0) // specify that it's not a string
+                        it.p3(id)
+                        it.p4(value)
+                    }
+                    stringParams.forEach { (id, value) ->
+                        it.p1(1) // specify that it's a string
+                        it.p3(id)
+                        it.pjstr(value)
+                    }
+                    val currPos = it.position
+                    it.position = 0
+                    it.p1(intParams.size + stringParams.size)
+                    it.position = currPos
+                }.onlyIf { intParams.isNotEmpty() || stringParams.isNotEmpty() }
             }
         }
     }
