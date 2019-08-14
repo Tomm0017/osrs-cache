@@ -57,45 +57,6 @@ open class ObjType : ConfigType {
     var stringParams: MutableMap<Int, String> = EMPTY_INT_STRING_MAP
     var intParams: MutableMap<Int, Int> = EMPTY_INT_INT_MAP
 
-    val hasOps: Boolean
-        get() = ops.isNotEmpty()
-
-    val hasIOps: Boolean
-        get() = iops.isNotEmpty()
-
-    val hasRecol: Boolean
-        get() = recol_s.isNotEmpty()
-
-    val hasRetex: Boolean
-        get() = retex_s.isNotEmpty()
-
-    val hasCountCo: Boolean
-        get() = countco.isNotEmpty()
-
-    val hasStrParams: Boolean
-        get() = stringParams.isNotEmpty()
-
-    val hasIntParams: Boolean
-        get() = intParams.isNotEmpty()
-
-    val isNoted: Boolean
-        get() = certtemplate != -1
-
-    val getDenotedId: Int
-        get() = certlink
-
-    val isBought: Boolean
-        get() = boughttemplate != -1
-
-    val getNonBoughtId: Int
-        get() = boughtlink
-
-    val isPlaceholder: Boolean
-        get() = placeholdertemplate != -1
-
-    val getNonPlaceholderId: Int
-        get() = placeholderlink
-
     override fun decodeType(packet: ReadOnlyPacket): Result<ObjType, DecodeMessage> {
         while (packet.isReadable) {
             val instruction = packet.g1
@@ -156,7 +117,7 @@ open class ObjType : ConfigType {
                 register(26) { womanwear2 = it.g2 }
                 for (i in 30 until 35) {
                     register(i) {
-                        if (!hasOps) {
+                        if (ops.isEmpty()) {
                             ops = Array(5) { EMPTY_STRING }
                         }
                         val option = it.gjstr
@@ -170,7 +131,7 @@ open class ObjType : ConfigType {
                 }
                 for (i in 35 until 40) {
                     register(i) {
-                        if (!hasIOps) {
+                        if (iops.isEmpty()) {
                             iops = Array(5) { EMPTY_STRING }
                         }
                         iops[i - 35] = it.gjstr
@@ -209,7 +170,7 @@ open class ObjType : ConfigType {
                 register(98) { certtemplate = it.g2 }
                 for (i in 100 until 110) {
                     register(i) {
-                        if (!hasCountCo) {
+                        if (countobj.isEmpty()) {
                             countobj = IntArray(10)
                             countco = IntArray(10)
                         }
