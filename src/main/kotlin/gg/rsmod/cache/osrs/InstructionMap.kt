@@ -14,11 +14,11 @@ class InstructionMap<T : ConfigType> :
     fun register(
         instruction: Int,
         init: OperationBuilder<T>.() -> Unit
-    ): RegisterMessage {
+    ): InstructionMessage {
         val message = if (containsKey(instruction)) {
-            RegisterMessage.Replace
+            InstructionMessage.Replace
         } else {
-            RegisterMessage.Put
+            InstructionMessage.Put
         }
         put(instruction, OperationBuilder<T>().apply(init).build())
         return message
@@ -26,19 +26,19 @@ class InstructionMap<T : ConfigType> :
 
     fun deregister(
         instruction: Int
-    ): Result<Operation<T>, RegisterMessage> {
+    ): Result<Operation<T>, InstructionMessage> {
         val op = remove(instruction)
         return if (op != null) {
             Ok(op)
         } else {
-            Err(RegisterMessage.NotFound)
+            Err(InstructionMessage.NotFound)
         }
     }
 
-    sealed class RegisterMessage {
-        object Put : RegisterMessage()
-        object Replace : RegisterMessage()
-        object NotFound : RegisterMessage()
+    sealed class InstructionMessage {
+        object Put : InstructionMessage()
+        object Replace : InstructionMessage()
+        object NotFound : InstructionMessage()
     }
 
     data class Operation<T : ConfigType>(
