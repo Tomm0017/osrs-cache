@@ -88,7 +88,7 @@ open class ObjType : ConfigType {
         )
 
         private val DEFAULT_OPS = arrayOf(
-            null, null, "Take", null, "Examine"
+            "Take", null, null, null, "Examine"
         )
 
         val instructions = InstructionMap<ObjType>()
