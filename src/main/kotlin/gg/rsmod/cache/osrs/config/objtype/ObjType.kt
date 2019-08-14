@@ -117,7 +117,7 @@ open class ObjType : ConfigType {
                 register(26) { womanwear2 = it.g2 }
                 for (i in 30 until 35) {
                     register(i) {
-                        if (ops.isEmpty()) {
+                        if (ops == DEFAULT_OPS) {
                             ops = Array(5) { EMPTY_STRING }
                         }
                         val option = it.gjstr
@@ -131,7 +131,7 @@ open class ObjType : ConfigType {
                 }
                 for (i in 35 until 40) {
                     register(i) {
-                        if (iops.isEmpty()) {
+                        if (iops == DEFAULT_IOPS) {
                             iops = Array(5) { EMPTY_STRING }
                         }
                         iops[i - 35] = it.gjstr
