@@ -442,7 +442,7 @@ open class ObjType : ConfigType {
                 }
 
                 write {
-                    it.p1(0) // placeholder for total param count
+                    it.p1(intParams.size + stringParams.size)
                     intParams.forEach { (id, value) ->
                         it.p1(0) // specify that it's not a string
                         it.p3(id)
@@ -453,10 +453,6 @@ open class ObjType : ConfigType {
                         it.p3(id)
                         it.pjstr(value)
                     }
-                    val currPos = it.position
-                    it.position = 0
-                    it.p1(intParams.size + stringParams.size)
-                    it.position = currPos
                 }.onlyIf { intParams.isNotEmpty() || stringParams.isNotEmpty() }
             }
         }
